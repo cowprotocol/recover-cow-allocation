@@ -1,6 +1,7 @@
 # Cow allocation token recovery
 
 The contracts in this repo are used to withdraw funds from [COW team allocations](https://github.com/cowprotocol/team-cow-allocation/) out of compromised wallets that have a valid claim.
+At this point in time, the recovery process only works with access to the private key of the compromised address. It doesn't work with smart-contract wallets.
 
 ## Project structure
 
@@ -24,6 +25,7 @@ The process is the following:
 1. The compromised user shares a known-good address for the allocation (receiver) and the compromised wallet (user).
 2. The contracts on this repo are [deployed](#deploy) with the parameters from the previous point.
 3. The compromised user needs to [sign a delegation authentication](#sign-a-delegation-authentication) to be used in a later step.
+   This step is only possible if the compromised address is an externally-owned account and the user has access to the private key.
 4. The team multisig owners need to [sign the following three transactions](#create-the-multisig-transaction) in the same batch:
    1. Enable the COW allocation module.
    2. Stop the claim of the compromised address. This claims all remaining COW tokens for the user.
@@ -70,6 +72,7 @@ forge verify-contract --rpc-url "$RPC_URL" --etherscan-api-key "$ETHERSCAN_API_K
 ### Sign a delegation authentication
 
 The compromiser user needs to use the (compromised) private key to create an [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) delegation authentication.
+As mentioned before, this step is only possible if the compromised address is an externally-owned account and the user has access to the private key.
 The easiest way to do this is by using `cast`:
 
 ```shell
