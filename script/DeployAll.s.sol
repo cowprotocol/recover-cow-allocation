@@ -3,12 +3,12 @@ pragma solidity ^0.8;
 
 import {Script, console} from "forge-std/Script.sol";
 
-import {DelegateTrigger} from "src/DelegateTrigger.sol";
+import {DelegationGuard} from "src/DelegationGuard.sol";
 import {RecoveringDelegate} from "src/RecoveringDelegate.sol";
 
 contract DeployAll is Script {
     RecoveringDelegate public delegate;
-    DelegateTrigger public trigger;
+    DelegationGuard public guard;
 
     function run(address receiver, address owner) public {
         console.log("Deploying on chain:", block.chainid);
@@ -22,8 +22,8 @@ contract DeployAll is Script {
         console.log("Using deployed delegate address:", address(delegate));
 
         vm.broadcast();
-        trigger = new DelegateTrigger{salt: bytes32(0)}(delegate, owner);
+        guard = new DelegationGuard{salt: bytes32(0)}(delegate, owner);
 
-        console.log("Deployed trigger address:", address(trigger));
+        console.log("Deployed guard address:", address(guard));
     }
 }

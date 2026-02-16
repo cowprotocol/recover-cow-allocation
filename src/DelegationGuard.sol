@@ -5,14 +5,14 @@ import {IERC20} from "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.so
 
 import {RecoveringDelegate} from "src/RecoveringDelegate.sol";
 
-/// @title DelegateTrigger
+/// @title DelegationGuard
 /// @notice A contract exposing a function that lets anyone call the owner.
 /// If the owner sports the expected DELEGATE as an EIP-7702 delegate, then
 /// the transaction goes through and the `withdraw` function is called.
 /// If the delegate isn't set, then the transaction reverts.
 /// This behavior is useful in a Safe batch transaction that's only supposed to
 /// succeed if the withdrawal is successful.
-contract DelegateTrigger {
+contract DelegationGuard {
     /// @notice The contract that is expected to be set as an EIP-7702 delegate
     /// at the OWNER address.
     RecoveringDelegate public immutable DELEGATE;

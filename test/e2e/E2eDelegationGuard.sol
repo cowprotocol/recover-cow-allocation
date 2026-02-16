@@ -5,10 +5,10 @@ import {Test, Vm} from "forge-std/Test.sol";
 import {AllocationModule} from "lib/team-cow-allocation/src/contracts/AllocationModule.sol";
 import {ModuleController} from "lib/team-cow-allocation/src/contracts/vendored/ModuleController.sol";
 
-import {DelegateTrigger} from "src/DelegateTrigger.sol";
+import {DelegationGuard} from "src/DelegationGuard.sol";
 import {IERC20, RecoveringDelegate} from "src/RecoveringDelegate.sol";
 
-contract E2eDelegateTriggerTest is Test {
+contract E2eDelegationGuardTest is Test {
     // MAINNET FORK CONSTANTS
     uint64 internal constant MAINNET_FORK_BLOCK = 24449552;
     // See `lib/team-cow-allocation/networks.json`
@@ -21,8 +21,8 @@ contract E2eDelegateTriggerTest is Test {
     address internal constant LIVE_USER = 0xf3e9BE5cc045Fdf2C4B5599446cdffC3c283B83B;
     IERC20 internal COW;
 
-    address internal receiver = makeAddr("E2EDelegateTriggerTest: receiver");
-    address internal executor = makeAddr("E2EDelegateTriggerTest: executor");
+    address internal receiver = makeAddr("E2EDelegationGuardTest: receiver");
+    address internal executor = makeAddr("E2EDelegationGuardTest: executor");
     // I wish it was possible to set an EIP-7702 delegation without knowing the
     // private key, but this doesn't seem to be possible and so we need to use
     // an independent wallet.
@@ -58,7 +58,7 @@ contract E2eDelegateTriggerTest is Test {
         //   same batch:
         //   1. Enable module
         //   2. Stop user allocation
-        //   3. Trigger the deployed `DelegateTrigger` to withdraw the funds to
+        //   3. trigger the deployed `DelegationGuard` to withdraw the funds to
         //      the receiver.
         //   For security, these functions should be sent in the same call of
         //   `execute`, so that the module isn't enabled if the trigger fails.
@@ -79,7 +79,7 @@ contract E2eDelegateTriggerTest is Test {
         );
 
         RecoveringDelegate delegate = new RecoveringDelegate(receiver);
-        DelegateTrigger trigger = new DelegateTrigger(delegate, userWallet.addr);
+        DelegationGuard guard = new DelegationGuard(delegate, userWallet.addr);
 
         // We confirm that a claim is available.
         vm.warp(claimStart + claimDuration / 2); // half of the vesting period
@@ -99,12 +99,12 @@ contract E2eDelegateTriggerTest is Test {
         emit IERC20.Transfer(address(TEAM_ALLOCATION_SAFE), userWallet.addr, cowClaim);
         ALLOCATION_MODULE.stopClaim(userWallet.addr);
 
-        // - Tx 3: trigger withdrawal
+        // - Tx 3: guard withdrawal
         vm.prank(address(TEAM_ALLOCATION_SAFE));
         vm.expectEmit(address(COW));
         emit IERC20.Transfer(userWallet.addr, receiver, cowClaim);
         vm.signAndAttachDelegation(address(delegate), userWallet.privateKey);
-        trigger.triggerWithdraw(COW);
+        guard.guardWithdraw(COW);
 
         assertEq(COW.balanceOf(userWallet.addr), 0, "No funds should remain in the user EOA");
         assertEq(COW.balanceOf(receiver), cowClaim, "Claimed funds should be sent to the receiver");
@@ -122,7 +122,7 @@ contract E2eDelegateTriggerTest is Test {
         ALLOCATION_MODULE.addClaim(userWallet.addr, claimStart, claimDuration, fullClaimAmount);
 
         RecoveringDelegate delegate = new RecoveringDelegate(receiver);
-        DelegateTrigger trigger = new DelegateTrigger(delegate, userWallet.addr);
+        DelegationGuard guard = new DelegationGuard(delegate, userWallet.addr);
 
         // - Tx 1: enable module
         vm.prank(address(TEAM_ALLOCATION_SAFE));
@@ -136,9 +136,9 @@ contract E2eDelegateTriggerTest is Test {
         vm.prank(address(TEAM_ALLOCATION_SAFE));
 
         vm.expectRevert(
-            abi.encodeWithSelector(DelegateTrigger.UnexpectedDelegate.selector, delegationCode(delegate), hex"")
+            abi.encodeWithSelector(DelegationGuard.UnexpectedDelegate.selector, delegationCode(delegate), hex"")
         );
-        trigger.triggerWithdraw(COW);
+        guard.guardWithdraw(COW);
     }
 
     function delegationCode(RecoveringDelegate _delegate) internal pure returns (bytes memory) {
