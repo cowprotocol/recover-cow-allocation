@@ -2,6 +2,16 @@
 
 The contracts in this repo are used to withdraw funds from [COW team allocations](https://github.com/cowprotocol/team-cow-allocation/) out of compromised wallets that have a valid claim.
 
+## Project structure
+
+This project is first and foremost a guide on [what to do if a wallet is compromised](#what-to-do-if-a-wallet-is-compromised).
+
+There are two contracts:
+- `RecoveringDelegate`: A contract used as an [EIP-7702](https://eips.ethereum.org/EIPS/eip-7702) delegate. It lets anyone withdraw token from the delegation authority to an immutable target.
+- `DelegationGuard`: A guard contract that triggers the withdrawal in the delegation authority and reverts if it doesn't use the right delegate.
+
+## What to do if a wallet is compromised
+
 The first thing to do when a wallet with a claim is compromised is **disabling the COW allocation module** from the team multisig as soon as possible.
 This makes it impossible for anyone to use their allocation, effectively freezing the funds (but the vesting still continues).
 
@@ -17,7 +27,7 @@ The process is the following:
 4. The team multisig owners need to [sign the following three transactions](#create-the-multisig-transaction) in the same batch:
    1. Enable the COW allocation module.
    2. Stop the claim of the compromised address. This claims all remaining COW tokens for the user.
-   3. Call the trigger function on the deployed `DelegateTrigger`. This transfers 
+   3. Call the trigger function on the deployed `DelegationGuard`. This transfers
    It's critical that all three are executed in the same batch: we need to make sure that the adversary cannot just re-enable the module and steal the allocation before the trigger is executed.
 5. Once signed, the transaction needs to be [executed while including the delegation authentication](#execute-the-multisig-transaction-with-the-delegate) from step 3.
 
@@ -51,9 +61,9 @@ If the contract wasn't verified on deployment, it can be verified as follows.
 ```shell
 ETHERSCAN_API_KEY=<your_etherscan_api_key>
 RPC_URL=<your_rpc_url>
-TRIGGER=<address of the DelegateTrigger contract>
-forge verify-contract --rpc-url "$RPC_URL" --etherscan-api-key "$ETHERSCAN_API_KEY" --watch "$TRIGGER" 'src/DelegateTrigger.sol:DelegateTrigger'
-RECOVERING_DELEGATE=$(cast call --rpc-url "$RPC_URL"  "$TRIGGER"  'DELEGATE()(address)')
+GUARD=<address of the DelegationGuard contract>
+forge verify-contract --rpc-url "$RPC_URL" --etherscan-api-key "$ETHERSCAN_API_KEY" --watch "$GUARD" 'src/DelegationGuard.sol:DelegationGuard'
+RECOVERING_DELEGATE=$(cast call --rpc-url "$RPC_URL"  "$GUARD"  'DELEGATE()(address)')
 forge verify-contract --rpc-url "$RPC_URL" --etherscan-api-key "$ETHERSCAN_API_KEY" --watch "$RECOVERING_DELEGATE" 'src/RecoveringDelegate.sol:RecoveringDelegate'
 ```
 
@@ -78,7 +88,7 @@ As an owner of the team multisig, go to the [transaction builder page](https://a
 
 You need the following information:
 - the compromised address of the user (`USER` in the description that follows),
-- the deployed `DelegateTrigger` contract (`DELEGATE_TRIGGER`),
+- the deployed `DelegationGuard` contract (`DELEGATION_GUARD`),
 
 Add the following transactions:
 
@@ -94,8 +104,8 @@ Add the following transactions:
    Input value `beneficiary` is `USER` from the information you collected from the start.
    Add the transaction to the batch.
 3. Trigger the withdrawal.
-   Address or ENS name: `DELEGATE_TRIGGER` (from the information you collected from the start).
-   You may need to import the ABI: you can find it on Etherscan under the code page of `DELEGATE_TRIGGER`.
+   Address or ENS name: `DELEGATION_GUARD` (from the information you collected from the start).
+   You may need to import the ABI: you can find it on Etherscan under the code page of `DELEGATION_GUARD`.
    Select contract method `stopClaim`.
    Input value `token` is `0xDEf1CA1fb7FBcDC777520aa7f396b4E015F497aB` (the COW token address).
    Add the transaction to the batch.
