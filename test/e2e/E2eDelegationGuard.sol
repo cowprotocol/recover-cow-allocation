@@ -104,7 +104,7 @@ contract E2eDelegationGuardTest is Test {
         vm.expectEmit(address(COW));
         emit IERC20.Transfer(userWallet.addr, receiver, cowClaim);
         vm.signAndAttachDelegation(address(delegate), userWallet.privateKey);
-        guard.guardWithdraw(COW);
+        guard.triggerWithdraw(COW);
 
         assertEq(COW.balanceOf(userWallet.addr), 0, "No funds should remain in the user EOA");
         assertEq(COW.balanceOf(receiver), cowClaim, "Claimed funds should be sent to the receiver");
@@ -138,7 +138,7 @@ contract E2eDelegationGuardTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(DelegationGuard.UnexpectedDelegate.selector, delegationCode(delegate), hex"")
         );
-        guard.guardWithdraw(COW);
+        guard.triggerWithdraw(COW);
     }
 
     function delegationCode(RecoveringDelegate _delegate) internal pure returns (bytes memory) {
