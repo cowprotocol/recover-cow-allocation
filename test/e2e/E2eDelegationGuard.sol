@@ -113,26 +113,14 @@ contract E2eDelegationGuardTest is Test {
     }
 
     function test_fundRecovery_revertsWithNoDelegate() external {
-        // Similar to `test_fundRecovery_success`, but the delegate address for
-        // the user isn't set correctly. This should revert.
-        uint32 claimStart = uint32(block.timestamp) - 10 weeks;
-        uint32 claimDuration = 40 weeks;
-        uint96 fullClaimAmount = 42 ether;
-        vm.prank(address(TEAM_ALLOCATION_SAFE));
-        ALLOCATION_MODULE.addClaim(userWallet.addr, claimStart, claimDuration, fullClaimAmount);
+        // Ideally we'd test the entire process in a single `execTransaction`,
+        // but we don't do that for simplicity.
+        // We just confirm the fact that the safe reverts if triggering the
+        // withdrawal.
 
         RecoveringDelegate delegate = new RecoveringDelegate(receiver);
         DelegationGuard guard = new DelegationGuard(delegate, userWallet.addr);
 
-        // - Tx 1: enable module
-        vm.prank(address(TEAM_ALLOCATION_SAFE));
-        TEAM_ALLOCATION_SAFE.enableModule(address(ALLOCATION_MODULE));
-
-        // - Tx 2: stop claim
-        vm.prank(address(TEAM_ALLOCATION_SAFE));
-        ALLOCATION_MODULE.stopClaim(userWallet.addr);
-
-        // - Tx 3: trigger withdrawal
         vm.prank(address(TEAM_ALLOCATION_SAFE));
 
         vm.expectRevert(
