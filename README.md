@@ -115,7 +115,21 @@ Add the following transactions:
 
 Note that the batch is **expected to fail simulation**.
 This is because the delegate authentication hasn't been included and without that we want the transaction to be reverting, since it's what allows the funds to be withdrawn.
-Unfortunately, there's no way to simulate the addition of a delegate on Tenderly at the time of writing.
+In principle it would be possible to set the delegate in advance and have the transaction succeed. The reason why this isn't suggested is that the adversary would be able to notice this and may change the delegate. No funds would be lost or at risk, but the delegate would have to be set again, essentially enabling a denial-of-service attack.
+
+#### How to get a Tenderly simulation
+
+The best known method to simulate a transaction at this time is through [Tenderly Virtual TestNets](https://docs.tenderly.co/faq/virtual-testnets).
+This gives a simulation link that's close to the one provided by the Safe web interface.
+Create a new testnet based on mainnet and make it accessible to everyone with the URL. Then, use the URL to enable a delegate by changing the code at the `USER` address:
+
+```sh
+REQUEST='{"jsonrpc": "2.0","method": "tenderly_setCode","params": ["<USER address here>","<address of the deployed RECOVERING_DELEGATE here>"],"id": "1"}'
+curl --silent --data "$REQUEST" -H "Content-Type: application/json" -X POST "$TENDERLY_TEST_NODE"
+```
+
+After this, you can use the web interface for simulating the transaction by copying all parameters from the failing Tenderly transaction (including state overrides).
+The transaction should be successful and the fund movements should be visible. A link to the explorer for the corresponding transaction can be shared.
 
 ### Execute the multisig transaction with the delegate
 
