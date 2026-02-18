@@ -124,7 +124,9 @@ This gives a simulation link that's close to the one provided by the Safe web in
 Create a new testnet based on mainnet and make it accessible to everyone with the URL. Then, use the URL to enable a delegate by changing the code at the `USER` address:
 
 ```sh
-REQUEST='{"jsonrpc": "2.0","method": "tenderly_setCode","params": ["<USER address here>","<address of the deployed RECOVERING_DELEGATE here>"],"id": "1"}'
+USER=<USER address here>
+RECOVERING_DELEGATE=<address of the deployed RECOVERING_DELEGATE here>
+REQUEST="{\"jsonrpc\": \"2.0\",\"method\": \"tenderly_setCode\",\"params\": [\"$USER\",\"0xef0100${RECOVERING_DELEGATE#0x}\"],\"id\": \"1\"}"
 curl --silent --data "$REQUEST" -H "Content-Type: application/json" -X POST "$TENDERLY_TEST_NODE"
 ```
 
