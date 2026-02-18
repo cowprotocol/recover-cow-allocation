@@ -44,16 +44,16 @@ Test run:
 ```shell
 PK=<your_private_key>
 RPC_URL=<your_rpc_url>
-USER=<the possibly untrusted user address; the address that has a COW allocation>
+USER=<the compromised user address; the address that has a COW allocation>
 RECEIVER=<a trusted receiver address; it will receive the funds from USER>
-forge script --rpc-url "$RPC_URL" --private-key "$PK" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$OWNER"
+forge script --rpc-url "$RPC_URL" --private-key "$PK" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$USER"
 ```
 
 To actually deploy and verify the contract on Etherscan:
 
 ```shell
 ETHERSCAN_API_KEY=<your_etherscan_api_key>
-forge script --rpc-url "$RPC_URL" --private-key "$PK" --etherscan-api-key "$ETHERSCAN_API_KEY" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$OWNER" --broadcast --verify
+forge script --rpc-url "$RPC_URL" --private-key "$PK" --etherscan-api-key "$ETHERSCAN_API_KEY" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$USER" --broadcast --verify
 ```
 
 ### Contract verification

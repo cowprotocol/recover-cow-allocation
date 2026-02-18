@@ -19,7 +19,7 @@ contract E2eDelegationGuardTest is Test {
     // This is the most recent user I found that claimed tokens through the
     // allocation module and used an EOA to store funds.
     address internal constant LIVE_USER = 0xf3e9BE5cc045Fdf2C4B5599446cdffC3c283B83B;
-    IERC20 internal COW;
+    IERC20 internal cow;
 
     address internal receiver = makeAddr("E2EDelegationGuardTest: receiver");
     address internal executor = makeAddr("E2EDelegationGuardTest: executor");
@@ -33,7 +33,7 @@ contract E2eDelegationGuardTest is Test {
         vm.createSelectFork(forkRpcUrl);
         vm.rollFork(MAINNET_FORK_BLOCK);
 
-        COW = IERC20(address(ALLOCATION_MODULE.cow()));
+        cow = IERC20(address(ALLOCATION_MODULE.cow()));
     }
 
     function test_noUserCanClaim() external {
@@ -95,19 +95,19 @@ contract E2eDelegationGuardTest is Test {
 
         // - Tx 2: stop claim
         vm.prank(address(TEAM_ALLOCATION_SAFE));
-        vm.expectEmit(address(COW));
+        vm.expectEmit(address(cow));
         emit IERC20.Transfer(address(TEAM_ALLOCATION_SAFE), userWallet.addr, cowClaim);
         ALLOCATION_MODULE.stopClaim(userWallet.addr);
 
         // - Tx 3: guard withdrawal
         vm.prank(address(TEAM_ALLOCATION_SAFE));
-        vm.expectEmit(address(COW));
+        vm.expectEmit(address(cow));
         emit IERC20.Transfer(userWallet.addr, receiver, cowClaim);
         vm.signAndAttachDelegation(address(delegate), userWallet.privateKey);
-        guard.triggerWithdraw(COW);
+        guard.triggerWithdraw(cow);
 
-        assertEq(COW.balanceOf(userWallet.addr), 0, "No funds should remain in the user EOA");
-        assertEq(COW.balanceOf(receiver), cowClaim, "Claimed funds should be sent to the receiver");
+        assertEq(cow.balanceOf(userWallet.addr), 0, "No funds should remain in the user EOA");
+        assertEq(cow.balanceOf(receiver), cowClaim, "Claimed funds should be sent to the receiver");
         vm.warp(claimStart + claimDuration);
         assertEq(ALLOCATION_MODULE.claimableCow(userWallet.addr), 0, "The user should be stopped");
     }
@@ -126,7 +126,7 @@ contract E2eDelegationGuardTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(DelegationGuard.UnexpectedDelegate.selector, delegationCode(delegate), hex"")
         );
-        guard.triggerWithdraw(COW);
+        guard.triggerWithdraw(cow);
     }
 
     function delegationCode(RecoveringDelegate _delegate) internal pure returns (bytes memory) {
