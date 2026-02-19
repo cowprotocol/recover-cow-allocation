@@ -44,16 +44,16 @@ Test run:
 ```shell
 PK=<your_private_key>
 RPC_URL=<your_rpc_url>
-USER=<the possibly untrusted user address; the address that has a COW allocation>
+USER=<the compromised user address; the address that has a COW allocation>
 RECEIVER=<a trusted receiver address; it will receive the funds from USER>
-forge script --rpc-url "$RPC_URL" --private-key "$PK" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$OWNER"
+forge script --rpc-url "$RPC_URL" --private-key "$PK" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$USER"
 ```
 
 To actually deploy and verify the contract on Etherscan:
 
 ```shell
 ETHERSCAN_API_KEY=<your_etherscan_api_key>
-forge script --rpc-url "$RPC_URL" --private-key "$PK" --etherscan-api-key "$ETHERSCAN_API_KEY" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$OWNER" --broadcast --verify
+forge script --rpc-url "$RPC_URL" --private-key "$PK" --etherscan-api-key "$ETHERSCAN_API_KEY" 'script/DeployAll.s.sol:DeployAll' "$RECEIVER" "$USER" --broadcast --verify
 ```
 
 ### Contract verification
@@ -124,7 +124,9 @@ This gives a simulation link that's close to the one provided by the Safe web in
 Create a new testnet based on mainnet and make it accessible to everyone with the URL. Then, use the URL to enable a delegate by changing the code at the `USER` address:
 
 ```sh
-REQUEST='{"jsonrpc": "2.0","method": "tenderly_setCode","params": ["<USER address here>","<address of the deployed RECOVERING_DELEGATE here>"],"id": "1"}'
+USER=<USER address here>
+RECOVERING_DELEGATE=<address of the deployed RECOVERING_DELEGATE here>
+REQUEST="{\"jsonrpc\": \"2.0\",\"method\": \"tenderly_setCode\",\"params\": [\"$USER\",\"0xef0100${RECOVERING_DELEGATE#0x}\"],\"id\": \"1\"}"
 curl --silent --data "$REQUEST" -H "Content-Type: application/json" -X POST "$TENDERLY_TEST_NODE"
 ```
 
